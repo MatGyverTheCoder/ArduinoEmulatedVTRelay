@@ -11,6 +11,7 @@
 //Initializations for the Circuit and Fault
 const int transistor = 7; //change to correct pin number 
 bool Fault = false; //Default no fault 
+float voltage = 3;
 
 //Initialization for Announcements
 #include "pitches.h"
@@ -101,22 +102,25 @@ void setup() {
 void loop() {
     //largeAnnouncement();
     //delay(5000);
+    if (voltage != 0) {
+  
+      if (DetectFault()) {
+        TurnOff();
+        smallAnnouncement();
+        delay(500);
+        TurnOn();
+          if (DetectFault()) {
+            TurnOff();
+            largeAnnouncement();
 
-
-    if (DetectFault()) {
-//      TurnOff();
-      smallAnnouncement();
-//      TurnOn();
-      delay(200);
-    }
-
-    if (DetectFault()) {
-//      TurnOff();
-      largeAnnouncement();
-      //turn off system
-//      sleep_mode();
 
     }
+      
+    }
+
+    }
+
+
 }
 
 //////////// User defined functions ////////////
@@ -124,11 +128,13 @@ void loop() {
 void TurnOn()
 {
   digitalWrite (transistor, HIGH);
+  voltage = 3; //just in case it still reads voltage as 0
 }
 
 void TurnOff()
 {
   digitalWrite (transistor, LOW);
+  voltage = 0; //set voltage to 0 so the circuit stays off
 }
 
 bool DetectFault()
