@@ -1,6 +1,6 @@
 
 
-const int transistor = 2; //change to correct pin number 
+const int transistor = 7; //change to correct pin number 
 bool Fault = false; //Default no fault
 
 void setup() {
