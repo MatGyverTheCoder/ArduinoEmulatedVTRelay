@@ -86,7 +86,6 @@ void loop() {
         largeAnnouncement();
       delay(1000);
     }
-    
 }
 
 //Detects fault
