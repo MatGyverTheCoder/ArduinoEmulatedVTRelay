@@ -2,20 +2,21 @@
  * Author: Mathew Hasting
  * Date: 10/16/21
  * Desc: Detects fault in Arduino circuit, and plays small/large announcements accordingly.
- * Credit for Take on Me! buzzer melody: https://create.arduino.cc/projecthub/GeneralSpud/passive-buzzer-song-take-on-me-by-a-ha-0f04a8
+ * Credit for Pirates of the Caribbean buzzer melody: https://github.com/xitanggg/-Pirates-of-the-Caribbean-Theme-Song/blob/master/Pirates_of_the_Caribbean_-_Theme_Song.ino
  */
 
 #include "pitches.h"
 
 int ledPin = 12;
-int buttonPin = 7;
 int buzzerPin = 2;
+
+int faultNum = 0;
 
 // Change to 0.5 for a slower version of the song, 1.25 for a faster version
 const float songSpeed = 1.0;
 
-// The notes array 
-int notes[] = {
+// The pirates of the caribbean notes array 
+int pirateNotes[] = {
     NOTE_E4, NOTE_G4, NOTE_A4, NOTE_A4, 0,
     NOTE_A4, NOTE_B4, NOTE_C5, NOTE_C5, 0,
     NOTE_C5, NOTE_D5, NOTE_B4, NOTE_B4, 0,
@@ -34,42 +35,13 @@ int notes[] = {
     NOTE_A4, NOTE_B4, NOTE_C5, NOTE_C5, 0,
     NOTE_D5, NOTE_E5, NOTE_A4, 0,
     NOTE_A4, NOTE_C5, NOTE_B4, NOTE_B4, 0,
-    NOTE_C5, NOTE_A4, NOTE_B4, 0,
+    NOTE_C5, NOTE_A4, NOTE_B4, 0};
 
-    NOTE_A4, NOTE_A4,
-    //Repeat of first part
-    /*NOTE_A4, NOTE_B4, NOTE_C5, NOTE_C5, 0,
-    NOTE_C5, NOTE_D5, NOTE_B4, NOTE_B4, 0,
-    NOTE_A4, NOTE_G4, NOTE_A4, 0,
-
-    NOTE_E4, NOTE_G4, NOTE_A4, NOTE_A4, 0,
-    NOTE_A4, NOTE_B4, NOTE_C5, NOTE_C5, 0,
-    NOTE_C5, NOTE_D5, NOTE_B4, NOTE_B4, 0,
-    NOTE_A4, NOTE_G4, NOTE_A4, 0,
-
-    NOTE_E4, NOTE_G4, NOTE_A4, NOTE_A4, 0,
-    NOTE_A4, NOTE_C5, NOTE_D5, NOTE_D5, 0,
-    NOTE_D5, NOTE_E5, NOTE_F5, NOTE_F5, 0,
-    NOTE_E5, NOTE_D5, NOTE_E5, NOTE_A4, 0,
-
-    NOTE_A4, NOTE_B4, NOTE_C5, NOTE_C5, 0,
-    NOTE_D5, NOTE_E5, NOTE_A4, 0,
-    NOTE_A4, NOTE_C5, NOTE_B4, NOTE_B4, 0,
-    NOTE_C5, NOTE_A4, NOTE_B4, 0,
-    //End of Repeat
-
-    NOTE_E5, 0, 0, NOTE_F5, 0, 0,
-    NOTE_E5, NOTE_E5, 0, NOTE_G5, 0, NOTE_E5, NOTE_D5, 0, 0,
-    NOTE_D5, 0, 0, NOTE_C5, 0, 0,
-    NOTE_B4, NOTE_C5, 0, NOTE_B4, 0, NOTE_A4,
-
-    NOTE_E5, 0, 0, NOTE_F5, 0, 0,
-    NOTE_E5, NOTE_E5, 0, NOTE_G5, 0, NOTE_E5, NOTE_D5, 0, 0,
-    NOTE_D5, 0, 0, NOTE_C5, 0, 0,
-    NOTE_B4, NOTE_C5, 0, NOTE_B4, 0, NOTE_A4*/};
+int startUp[] = {
+  NOTE_C4, NOTE_G3,NOTE_G3, NOTE_A3, NOTE_G3,0, NOTE_B3, NOTE_C4};
 
 // The note duration, 8 = 8th note, 4 = quarter note, etc.
-int durations[] = {
+int pirateDurations[] = {
     125, 125, 250, 125, 125,
     125, 125, 250, 125, 125,
     125, 125, 250, 125, 125,
@@ -88,59 +60,33 @@ int durations[] = {
     125, 125, 250, 125, 125,
     250, 125, 250, 125,
     125, 125, 250, 125, 125,
-    125, 125, 375, 375,
+    125, 125, 375, 375};
 
-    250, 125,
-    //Rpeat of First Part
-    /*125, 125, 250, 125, 125,
-    125, 125, 250, 125, 125,
-    125, 125, 375, 125,
-
-    125, 125, 250, 125, 125,
-    125, 125, 250, 125, 125,
-    125, 125, 250, 125, 125,
-    125, 125, 375, 125,
-
-    125, 125, 250, 125, 125,
-    125, 125, 250, 125, 125,
-    125, 125, 250, 125, 125,
-    125, 125, 125, 250, 125,
-
-    125, 125, 250, 125, 125,
-    250, 125, 250, 125,
-    125, 125, 250, 125, 125,
-    125, 125, 375, 375,
-    //End of Repeat
-
-    250, 125, 375, 250, 125, 375,
-    125, 125, 125, 125, 125, 125, 125, 125, 375,
-    250, 125, 375, 250, 125, 375,
-    125, 125, 125, 125, 125, 500,
-
-    250, 125, 375, 250, 125, 375,
-    125, 125, 125, 125, 125, 125, 125, 125, 375,
-    250, 125, 375, 250, 125, 375,
-    125, 125, 125, 125, 125, 500*/};
-
-// determine the length of the arrays to use in the loop iteration
-int songLength = sizeof(notes)/sizeof(notes[0]);
+int startDurations[] = {
+  4, 8, 8, 4,4,4,4,4 };
 
 void setup() {
   // put your setup code here, to run once:
    pinMode(ledPin, OUTPUT);
    pinMode(buzzerPin, OUTPUT);
    pinMode(buttonPin, INPUT);
+   startAnnouncement();
+   //musicPlayer(startUp, startDuration);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  /*int pushed = digitalRead(buttonPin);  // read input value
-  if (pushed == HIGH) // check if the input is HIGH    
-    digitalWrite(ledPin, HIGH);  // turn LED OFF
-  else
-    digitalWrite(ledPin, LOW);*/
-    largeAnnouncement();
-    delay(5000);
+    //largeAnnouncement();
+    //delay(5000);
+
+    if(fault()) {
+      faultNum++;
+      if(faultNum < 2)
+        smallAnnouncement();
+      else
+        largeAnnouncement();
+      delay(1000);
+    }
+    
 }
 
 //Detects fault
@@ -165,17 +111,17 @@ void smallAnnouncement() {
 }
 
 void largeAnnouncement(){
-  const int totalNotes = sizeof(notes) / sizeof(int);
+  const int totalNotes = sizeof(pirateNotes) / sizeof(int);
   // Loop through each note
   for (int i = 0; i < totalNotes; i++)
   {
-    const int currentNote = notes[i];
-    float wait = durations[i] / songSpeed;
+    const int currentNote = pirateNotes[i];
+    float wait = pirateDurations[i] / songSpeed;
     // Play tone if currentNote is not 0 frequency, otherwise pause (noTone)
     if (currentNote != 0)
     {
       digitalWrite(ledPin, HIGH);
-      tone(buzzerPin, notes[i], wait); // tone(pin, frequency, duration)
+      tone(buzzerPin, pirateNotes[i], wait); // tone(pin, frequency, duration)
     }
     else
     {
@@ -186,3 +132,41 @@ void largeAnnouncement(){
     delay(wait);
   }
 }
+
+void startAnnouncement(){
+  // iterate over the notes of the melody:
+  for (int thisNote = 0; thisNote < 8; thisNote++) {
+    // to calculate the note duration, take one second 
+    int noteDuration = 1000/startDurations[thisNote];
+    tone(buzzerPin, startUp[thisNote],startDurations);
+    // to distinguish the notes, set a minimum time between them.
+    int pauseBetweenNotes = noteDuration * 1;
+    delay(pauseBetweenNotes);
+    // stop the tone playing:
+    noTone(buzzerPin);
+    if(thisNote % 2)
+      digitalWrite(ledPin, HIGH);
+    else
+      digitalWrite(ledPin, LOW);
+  }
+  digitalWrite(ledPin, LOW);
+  delay(500);
+  
+}
+
+//Work on this if have time
+/*void musicPlayer(int notes[], int durations[]){
+  for (int thisNote = 0; thisNote < 8; thisNote++) {
+    // to calculate the note duration, take one second 
+    // divided by the note type.
+    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
+    int noteDuration = 1000/durations[thisNote];
+    tone(buzzerPin, notes[thisNote],durations);
+    // to distinguish the notes, set a minimum time between them.
+    // the note's duration + 30% seems to work well:
+    int pauseBetweenNotes = noteDuration * songSpeed;
+    delay(pauseBetweenNotes);
+    // stop the tone playing:
+    noTone(buzzerPin);
+  }
+}*/
